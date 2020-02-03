@@ -17,7 +17,27 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "file-upload": [
+        "dist/file-upload"
+      ],
+      "file-upload/*": [
+        "dist/file-upload/*"
+      ],
+      "test": [
+        "dist/test"
+      ],
+      "test/*": [
+        "dist/test/*"
+      ],
+      "test-lib": [
+        "dist/test-lib"
+      ],
+      "test-lib/*": [
+        "dist/test-lib/*"
+      ]
+    }
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
