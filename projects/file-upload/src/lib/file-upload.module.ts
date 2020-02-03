@@ -1,7 +1,7 @@
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 
-import { NgModule } from '@angular/core';
+import { NgModule, ModuleWithProviders, InjectionToken } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
@@ -14,7 +14,12 @@ import {
 // store
 import * as fromStore from './store';
 
-import { TransferFileService } from './services/transfer-file.service';
+import {
+  TransferFileService,
+  TransferFileConfig,
+  TransferFileDefaultConfig,
+  TransferFileConfigService,
+} from './services/transfer-file.service';
 import { FileUploaderComponent } from './containers';
 import { ProgressComponent, FileUploadComponent } from './components';
 
@@ -29,12 +34,33 @@ const MATERIAL_COMPONENTS = [
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    StoreModule.forFeature('transfers', fromStore.reducers),
+    StoreModule.forFeature('uploads', fromStore.reducers),
     EffectsModule.forFeature(fromStore.effects),
     MATERIAL_COMPONENTS,
   ],
-  providers: [TransferFileService],
   declarations: [FileUploaderComponent, FileUploadComponent, ProgressComponent],
   exports: [FileUploaderComponent, FileUploadComponent, ProgressComponent],
 })
-export class FileUploadModule {}
+export class FileUploadModule {
+  static forRoot(
+    config: Partial<TransferFileConfig> = {},
+  ): ModuleWithProviders<FileUploadModule> {
+    const transferFileConfig =
+      !!config && typeof config === 'object'
+        ? {
+            ...TransferFileDefaultConfig,
+            ...config,
+          }
+        : TransferFileDefaultConfig;
+    return {
+      ngModule: FileUploadModule,
+      providers: [
+        TransferFileService,
+        {
+          provide: TransferFileConfigService,
+          useValue: transferFileConfig,
+        },
+      ],
+    };
+  }
+}
