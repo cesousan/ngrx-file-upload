@@ -1,5 +1,7 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+projects/test-app
+
 # compiled output
 /dist
 /tmp

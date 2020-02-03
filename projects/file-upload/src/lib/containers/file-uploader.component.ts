@@ -7,6 +7,8 @@ import {
   Input,
   OnDestroy,
   HostListener,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 
@@ -46,6 +48,12 @@ export class FileUploaderComponent implements OnInit, OnDestroy {
   @Input() ownerId: string; // use observable and make it reactive.
   @Input() fileDestination: BucketDestination;
 
+  @Output() uploadedFile: EventEmitter<{
+    fileName: string;
+    ownerId: string;
+    destination: BucketDestination;
+  }> = new EventEmitter();
+
   public completed$: Observable<boolean>;
   public progress$: Observable<number>;
   public error$: Observable<string>;
@@ -75,6 +83,12 @@ export class FileUploaderComponent implements OnInit, OnDestroy {
   }
 
   uploadFile(event: File[]) {
+    this.uploadedFile.emit({
+      fileName: event[0].name,
+      ownerId: this.ownerId,
+      destination: this.fileDestination,
+    });
+
     this.store$.dispatch(
       new fromStore.UploadRequest({
         file: event[0],

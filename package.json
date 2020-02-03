@@ -22,6 +22,8 @@
     "@angular/platform-browser-dynamic": "~8.2.12",
     "@ngrx/effects": "^8.6.0",
     "@ngrx/store": "^8.6.0",
+    "@ngrx/store-devtools": "^8.6.0",
+    "file-upload": "file:dist/file-upload",
     "rxjs": "~6.4.0",
     "tslib": "^1.10.0",
     "zone.js": "^0.10.2"

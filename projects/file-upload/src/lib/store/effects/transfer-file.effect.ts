@@ -27,7 +27,7 @@ export class TransferFileEffect {
   @Effect()
   uploadRequestEffect$: Observable<Action> = this.actions$.pipe(
     ofType(fromFileTransfer.UPLOAD_REQUEST),
-    map(({ payload }) => setFileOwnership(payload)),
+    map(({ payload }) => this.setFileOwnership(payload)),
     concatMap(payload =>
       this.uploadService.uploadFile(payload.file, payload.destination).pipe(
         takeUntil(this.actions$.pipe(ofType(fromFileTransfer.UPLOAD_CANCEL))),
@@ -37,52 +37,51 @@ export class TransferFileEffect {
     ),
   );
 
-  @Effect()
-  getFileSrcOnUploadSuccessEffect$: Observable<Action> = this.actions$.pipe(
-    ofType(fromFileTransfer.UPLOAD_COMPLETED),
-    filter(({ payload }) => !!payload.file && !!payload.file.id),
-    map(({ payload }) => {
-      const fileId = payload.file.id;
-      const destination = payload.file.destination;
-      return new fromFileTransfer.GetFileRequest({ fileId, destination });
-    }),
-  );
-
-  private getActionFromHttpEvent = (
+  private getActionFromHttpEvent(
     owner: HasOwner,
     destination: BucketDestination,
-  ) => (event: HttpEvent<any>) => {
-    switch (event.type) {
-      case HttpEventType.Sent: {
-        return new fromFileTransfer.UploadStarted();
+  ) {
+    return (event: HttpEvent<any>) => {
+      switch (event.type) {
+        case HttpEventType.Sent: {
+          return new fromFileTransfer.UploadStarted();
+        }
+        case HttpEventType.DownloadProgress:
+        case HttpEventType.UploadProgress: {
+          return new fromFileTransfer.UploadProgress({
+            progress: Math.round((100 * event.loaded) / event.total),
+          });
+        }
+        case HttpEventType.ResponseHeader:
+        case HttpEventType.Response: {
+          return event.status === 201
+            ? new fromFileTransfer.UploadCompleted({
+                file: this.getFileInfo(
+                  event as HttpResponse<UploadedFileResponse>,
+                  owner,
+                  destination,
+                ),
+              })
+            : new fromFileTransfer.UploadFailure({
+                error: event.statusText,
+              });
+        }
+        default: {
+          return new fromFileTransfer.UploadFailure({
+            error: `Unknown Event : ${JSON.stringify(event)}`,
+          });
+        }
       }
-      case HttpEventType.DownloadProgress:
-      case HttpEventType.UploadProgress: {
-        return new fromFileTransfer.UploadProgress({
-          progress: Math.round((100 * event.loaded) / event.total),
-        });
-      }
-      case HttpEventType.ResponseHeader:
-      case HttpEventType.Response: {
-        return event.status === 201
-          ? new fromFileTransfer.UploadCompleted({
-              file: this.getFileInfo(
-                event as HttpResponse<UploadedFileResponse>,
-                owner,
-                destination,
-              ),
-            })
-          : new fromFileTransfer.UploadFailure({
-              error: event.statusText,
-            });
-      }
-      default: {
-        return new fromFileTransfer.UploadFailure({
-          error: `Unknown Event : ${JSON.stringify(event)}`,
-        });
-      }
-    }
-  };
+    };
+  }
+
+  private setFileOwnership(
+    payload: any,
+  ): { file: File; destination: BucketDestination; owner: HasOwner } {
+    return !!payload.hasOwner && !!payload.hasOwner.ownerId
+      ? { ...payload, owner: { owned: true, ownerId: payload.ownerId } }
+      : { ...payload, owner: { owned: false, ownerId: null } };
+  }
 
   private getFileInfo(
     event: HttpResponse<UploadedFileResponse>,
@@ -92,25 +91,18 @@ export class TransferFileEffect {
     if (!event.body) {
       return;
     }
-    const { name, id, mimetype, updatedAt: update } = event.body;
-    const updatedAt = new Date(update);
+    const { name, id, mimetype: type, size, updatedAt } = event.body;
+    const parsedSize = Number.parseInt(size, 10);
     return {
       id,
       name,
-      type: mimetype,
+      type,
+      size: parsedSize,
       description: null,
       src: this.uploadService.getFileUrl(id, destination),
       destination,
-      updatedAt,
+      updatedAt: new Date(updatedAt),
       ...owner,
     };
   }
 }
-
-const setFileOwnership = (
-  payload: any,
-): { file: File; destination: BucketDestination; owner: HasOwner } => {
-  return !!payload.hasOwner && !!payload.hasOwner.ownerId
-    ? { ...payload, owner: { owned: true, ownerId: payload.ownerId } }
-    : { ...payload, owner: { owned: false, ownerId: null } };
-};

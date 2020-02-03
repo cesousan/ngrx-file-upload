@@ -968,6 +968,11 @@
   resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-8.6.0.tgz#a0d7339597a5128c5cf896ddcf93f73406a45860"
   integrity sha512-JdyJLQbv/wnE0ZPY9DcDOtF9PzJuzsKWmIWgIGunHF18wdjk5O8Zpkcrxq18wDRL6geg5UTtNJRMvTQhpDbzow==
 
+"@ngrx/store-devtools@^8.6.0":
+  version "8.6.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store-devtools/-/store-devtools-8.6.0.tgz#ac287e4b094d099781cdc9f3281039c0e988296c"
+  integrity sha512-PWZmiOZE0J56GFfZpuzKLb7w0K2c6OXZSp/eWDeAvtdHFD4/Nas1i4TXtiWWMWWnSZeNs0hNIg4nFJXi2EddJQ==
+
 "@ngrx/store@^8.6.0":
   version "8.6.0"
   resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-8.6.0.tgz#8540c5bd40b33fc2f443e7e86f47c0d801b8f413"
@@ -3415,6 +3420,11 @@ file-loader@4.2.0:
   dependencies:
     loader-utils "^1.2.3"
     schema-utils "^2.0.0"
+
+"file-upload@file:dist/file-upload":
+  version "0.0.1"
+  dependencies:
+    tslib "^1.9.0"
 
 file-uri-to-path@1.0.0:
   version "1.0.0"
