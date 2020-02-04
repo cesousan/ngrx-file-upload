@@ -24,7 +24,6 @@
     "@ngrx/entity": "^8.6.0",
     "@ngrx/store": "^8.6.0",
     "@ngrx/store-devtools": "^8.6.0",
-    "file-upload": "file:dist/file-upload",
     "rxjs": "~6.4.0",
     "tslib": "^1.10.0",
     "zone.js": "^0.10.2"
@@ -53,5 +52,8 @@
     "tsickle": "^0.37.0",
     "tslint": "~5.15.0",
     "typescript": "~3.5.3"
+  },
+  "optionalDependencies": {
+    "file-upload": "file:dist/file-upload"
   }
 }

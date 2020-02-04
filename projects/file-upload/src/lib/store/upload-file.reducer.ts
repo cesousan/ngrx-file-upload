@@ -1,7 +1,8 @@
-import * as fromActions from './upload-file.action';
-import { UploadStatus, LoadedFile } from '../models';
 import { MemoizedSelector, createFeatureSelector } from '@ngrx/store';
 import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+
+import * as fromActions from './upload-file.action';
+import { UploadStatus, LoadedFile } from '../file.model';
 
 export const FILE_UPLOAD_FEATURE_KEY = 'uploads';
 
@@ -23,13 +24,13 @@ export const adapter: EntityAdapter<LoadedFile> = createEntityAdapter<
   LoadedFile
 >({
   selectId: selectFileId,
-  sortComparer: sortByLastUpdated,
+  sortComparer: sortByLastUpdated
 });
 
 export const initialState: FileUploadState = adapter.getInitialState({
   status: UploadStatus.Ready,
   error: null,
-  progress: null,
+  progress: null
 });
 
 export const selectUploadFeatureState: MemoizedSelector<
@@ -39,7 +40,7 @@ export const selectUploadFeatureState: MemoizedSelector<
 
 export function reducer(
   state = initialState,
-  action: fromActions.UploadActions,
+  action: fromActions.UploadActions
 ): FileUploadState {
   switch (action.type) {
     case fromActions.UPLOAD_REQUEST: {
@@ -47,7 +48,7 @@ export function reducer(
         ...state,
         status: UploadStatus.Requested,
         progress: null,
-        error: null,
+        error: null
       };
     }
     case fromActions.UPLOAD_CANCEL: {
@@ -55,7 +56,7 @@ export function reducer(
         ...state,
         status: UploadStatus.Ready,
         progress: null,
-        error: null,
+        error: null
       };
     }
     case fromActions.UPLOAD_RESET: {
@@ -63,7 +64,7 @@ export function reducer(
         ...state,
         status: UploadStatus.Ready,
         progress: null,
-        error: null,
+        error: null
       };
     }
     case fromActions.UPLOAD_FAILURE: {
@@ -71,20 +72,20 @@ export function reducer(
         ...state,
         status: UploadStatus.Failed,
         error: action.payload.error,
-        progress: null,
+        progress: null
       };
     }
     case fromActions.UPLOAD_STARTED: {
       return {
         ...state,
         status: UploadStatus.Started,
-        progress: 0,
+        progress: 0
       };
     }
     case fromActions.UPLOAD_PROGRESS: {
       return {
         ...state,
-        progress: action.payload.progress,
+        progress: action.payload.progress
       };
     }
     case fromActions.UPLOAD_COMPLETED: {
@@ -92,7 +93,7 @@ export function reducer(
         ...state,
         status: UploadStatus.Completed,
         progress: 100,
-        error: null,
+        error: null
       });
     }
     default: {
@@ -102,10 +103,10 @@ export function reducer(
 }
 
 export const {
-  selectIds: selectFileIds,
-  selectEntities: selectFileEntities,
-  selectAll: selectAllFiles,
-  selectTotal: selectFilesTotal,
+  selectIds,
+  selectEntities,
+  selectAll,
+  selectTotal
 } = adapter.getSelectors();
 
 export const getError = (state: FileUploadState): string => state.error;

@@ -3,8 +3,6 @@ import { Observable } from 'rxjs';
 import { Injectable, InjectionToken, Inject } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest } from '@angular/common/http';
 
-import { BucketDestination } from './models';
-
 export interface TransferFileConfig {
   host: string;
   port: number;
@@ -13,14 +11,14 @@ export interface TransferFileConfig {
 }
 
 export const TransferFileConfigService = new InjectionToken<TransferFileConfig>(
-  'FileUploadConfig',
+  'FileUploadConfig'
 );
 
 export const TransferFileDefaultConfig: TransferFileConfig = {
   host: '127.0.0.1',
   port: 3000,
   endpoint: 'files',
-  ssl: false,
+  ssl: false
 };
 
 @Injectable()
@@ -29,12 +27,12 @@ export class TransferFileService {
 
   constructor(
     @Inject(TransferFileConfigService) private config: TransferFileConfig,
-    private http: HttpClient,
+    private http: HttpClient
   ) {}
 
   public uploadFile(
     file: File,
-    destination: BucketDestination,
+    destination: string
   ): Observable<HttpEvent<{}>> {
     const formData = new FormData();
 
@@ -42,23 +40,23 @@ export class TransferFileService {
 
     const options = {
       reportProgress: true,
-      observe: 'events',
+      observe: 'events'
     };
 
     const req = new HttpRequest(
       'POST',
       `${this.API_UPLOAD_BASE_URL}/upload/${destination}`,
       formData,
-      options,
+      options
     );
     return this.http.request(req);
   }
 
-  public getFileUrl(fileName: string, fileCategory: BucketDestination) {
+  public getFileUrl(fileName: string, fileCategory: string) {
     return `${this.API_UPLOAD_BASE_URL}/stream/${fileCategory}/${fileName}`;
   }
 
-  public getFile(fileName: string, fileCategory: BucketDestination) {
+  public getFile(fileName: string, fileCategory: string) {
     return this.http.get(this.getFileUrl(fileName, fileCategory));
   }
 

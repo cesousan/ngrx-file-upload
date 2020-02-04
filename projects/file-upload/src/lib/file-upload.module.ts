@@ -8,7 +8,7 @@ import {
   MatProgressBarModule,
   MatButtonModule,
   MatIconModule,
-  MatChipsModule,
+  MatChipsModule
 } from '@angular/material';
 
 // store
@@ -18,51 +18,53 @@ import {
   TransferFileService,
   TransferFileConfig,
   TransferFileDefaultConfig,
-  TransferFileConfigService,
+  TransferFileConfigService
 } from './transfer-file.service';
 
 import { FileUploaderComponent } from './file-uploader.component';
 import { FileUploadComponent } from './file-upload.component';
 import { ProgressComponent } from './progress.component';
+import { FileUploadFacade } from './file-upload.facade';
 
 const MATERIAL_COMPONENTS = [
   MatProgressBarModule,
   MatButtonModule,
   MatIconModule,
-  MatChipsModule,
+  MatChipsModule
 ];
 
 @NgModule({
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    StoreModule.forFeature('uploads', fromStore.reducers),
-    EffectsModule.forFeature(fromStore.effects),
-    MATERIAL_COMPONENTS,
+    StoreModule.forFeature('uploads', [fromStore.reducer]),
+    EffectsModule.forFeature([fromStore.UploadFileEffect]),
+    MATERIAL_COMPONENTS
   ],
   declarations: [FileUploaderComponent, FileUploadComponent, ProgressComponent],
-  exports: [FileUploaderComponent, FileUploadComponent, ProgressComponent],
+  exports: [FileUploaderComponent, FileUploadComponent, ProgressComponent] // TODO: try to restrict exports to bare minimum
 })
 export class FileUploadModule {
   static forRoot(
-    config: Partial<TransferFileConfig> = {},
+    config: Partial<TransferFileConfig> = {}
   ): ModuleWithProviders<FileUploadModule> {
     const transferFileConfig =
       !!config && typeof config === 'object'
         ? {
             ...TransferFileDefaultConfig,
-            ...config,
+            ...config
           }
         : TransferFileDefaultConfig;
     return {
       ngModule: FileUploadModule,
       providers: [
         TransferFileService,
+        FileUploadFacade,
         {
           provide: TransferFileConfigService,
-          useValue: transferFileConfig,
-        },
-      ],
+          useValue: transferFileConfig
+        }
+      ]
     };
   }
 }

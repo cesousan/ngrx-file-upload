@@ -1,6 +1,5 @@
 import { Action } from '@ngrx/store';
-import { BucketDestination } from '../models';
-import { LoadedFile } from '../models/file.model';
+import { LoadedFile, UploadFileRequestPayload } from '../file.model';
 
 export const UPLOAD_REQUEST = '[File Upload Form] Request';
 export const UPLOAD_CANCEL = '[File Upload Form] Cancel';
@@ -12,13 +11,7 @@ export const UPLOAD_COMPLETED = '[File Upload API] Success';
 
 export class UploadRequest implements Action {
   readonly type = UPLOAD_REQUEST;
-  constructor(
-    public payload: {
-      file: File;
-      destination: BucketDestination;
-      ownerId: string;
-    },
-  ) {}
+  constructor(public payload: UploadFileRequestPayload) {}
 }
 
 export class UploadCancel implements Action {

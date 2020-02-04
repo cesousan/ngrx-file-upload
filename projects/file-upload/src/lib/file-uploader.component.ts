@@ -1,5 +1,5 @@
 import { Store } from '@ngrx/store';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, BehaviorSubject, combineLatest } from 'rxjs';
 
 import {
   Component,
@@ -8,12 +8,14 @@ import {
   OnDestroy,
   HostListener,
   Output,
-  EventEmitter,
+  EventEmitter
 } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 
-import { FileType, BucketDestination } from './models';
 import * as fromStore from './store';
+import { FileUploadFacade } from './file-upload.facade';
+import { withLatestFrom, map, filter, tap, takeUntil } from 'rxjs/operators';
+import { UploadFileRequestPayload } from './file.model';
 
 @Component({
   selector: 'lib-file-uploader',
@@ -40,41 +42,66 @@ import * as fromStore from './store';
         margin: 5px;
         padding: 5px;
       }
-    `,
-  ],
+    `
+  ]
 })
 export class FileUploaderComponent implements OnInit, OnDestroy {
-  @Input() requieredFileTypes: FileType[];
-  @Input() ownerId: string; // use observable and make it reactive.
-  @Input() fileDestination: BucketDestination;
+  @Input() requieredFileTypes: string[];
+  @Input() ownerId: Observable<string>;
+  @Input() fileDestination: Observable<string>;
 
   @Output() uploadedFile: EventEmitter<{
     fileName: string;
     ownerId: string;
-    destination: BucketDestination;
+    destination: string;
   }> = new EventEmitter();
-
-  public completed$: Observable<boolean>;
-  public progress$: Observable<number>;
-  public error$: Observable<string>;
-
-  public isInProgress$: Observable<boolean>;
-  public isReady$: Observable<boolean>;
-  public hasFailed$: Observable<boolean>;
 
   public uploadForm: FormGroup;
 
-  private destroy$ = new Subject<void>();
+  // public completed$: Observable<boolean>;
+  // public progress$: Observable<number>;
+  // public error$: Observable<string>;
 
-  constructor(private store$: Store<fromStore.FileTransferState>) {}
+  // public isInProgress$: Observable<boolean>;
+  // public isReady$: Observable<boolean>;
+  // public hasFailed$: Observable<boolean>;
+
+  private destroy$ = new Subject<void>();
+  private uploadRequested: BehaviorSubject<File> = new BehaviorSubject(null);
+
+  constructor(private facade: FileUploadFacade) {}
 
   ngOnInit() {
     this.uploadForm = new FormGroup({
       file: new FormControl(null, [
         Validators.required,
-        requiredTypes(this.requieredFileTypes),
-      ]),
+        requiredTypes(this.requieredFileTypes)
+      ])
     });
+
+    this.uploadRequested
+      .asObservable()
+      .pipe(
+        filter(file => !!file),
+        withLatestFrom(this.ownerId, this.fileDestination),
+        map(
+          ([file, ownerId, destination]): UploadFileRequestPayload => ({
+            file,
+            ownerId,
+            destination
+          })
+        ),
+        tap(reqPayload => {
+          const { file, ...meta } = reqPayload;
+          this.uploadedFile.emit({
+            fileName: file.name,
+            ...meta
+          });
+        }),
+        tap(this.facade.dispatchUploadRequest),
+        takeUntil(this.destroy$)
+      )
+      .subscribe();
   }
 
   @HostListener('window:beforeunload')
@@ -83,32 +110,20 @@ export class FileUploaderComponent implements OnInit, OnDestroy {
   }
 
   uploadFile(event: File[]) {
-    this.uploadedFile.emit({
-      fileName: event[0].name,
-      ownerId: this.ownerId,
-      destination: this.fileDestination,
-    });
-
-    this.store$.dispatch(
-      new fromStore.UploadRequest({
-        file: event[0],
-        ownerId: this.ownerId,
-        destination: this.fileDestination,
-      }),
-    );
+    this.uploadRequested.next(event[0]);
   }
 
   cancelAttachment(event: string) {}
 }
 
-function requiredTypes(fileTypes: Array<FileType>) {
+function requiredTypes(fileTypes: Array<string>) {
   return (control: FormControl) => {
     const file = control.value;
     if (file) {
       const extension = file.name.split('.')[1].toLowerCase();
       if (!fileTypes.map(x => x.toLowerCase().includes(extension))) {
         return {
-          requiredFileType: true,
+          requiredFileType: true
         };
       }
       return null;
