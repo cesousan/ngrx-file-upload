@@ -1,6 +1,6 @@
 import { Action } from '@ngrx/store';
-import { BucketDestination } from '../../models';
-import { LoadedFile } from '../../models/file.model';
+import { BucketDestination } from '../models';
+import { LoadedFile } from '../models/file.model';
 
 export const UPLOAD_REQUEST = '[File Upload Form] Request';
 export const UPLOAD_CANCEL = '[File Upload Form] Cancel';
@@ -17,7 +17,7 @@ export class UploadRequest implements Action {
       file: File;
       destination: BucketDestination;
       ownerId: string;
-    }
+    },
   ) {}
 }
 

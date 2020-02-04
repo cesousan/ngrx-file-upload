@@ -12,8 +12,8 @@ import {
 } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 
-import { FileType, BucketDestination } from '../models';
-import * as fromStore from '../store';
+import { FileType, BucketDestination } from './models';
+import * as fromStore from './store';
 
 @Component({
   selector: 'lib-file-uploader',

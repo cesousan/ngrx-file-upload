@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { Injectable, InjectionToken, Inject } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest } from '@angular/common/http';
 
-import { BucketDestination } from '../models';
+import { BucketDestination } from './models';
 
 export interface TransferFileConfig {
   host: string;

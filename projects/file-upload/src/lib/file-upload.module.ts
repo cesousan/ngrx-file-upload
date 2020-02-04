@@ -1,7 +1,7 @@
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 
-import { NgModule, ModuleWithProviders, InjectionToken } from '@angular/core';
+import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
@@ -19,9 +19,11 @@ import {
   TransferFileConfig,
   TransferFileDefaultConfig,
   TransferFileConfigService,
-} from './services/transfer-file.service';
-import { FileUploaderComponent } from './containers';
-import { ProgressComponent, FileUploadComponent } from './components';
+} from './transfer-file.service';
+
+import { FileUploaderComponent } from './file-uploader.component';
+import { FileUploadComponent } from './file-upload.component';
+import { ProgressComponent } from './progress.component';
 
 const MATERIAL_COMPONENTS = [
   MatProgressBarModule,

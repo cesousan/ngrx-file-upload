@@ -1,36 +1,36 @@
 import { Action } from '@ngrx/store';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Observable, of } from 'rxjs';
-import { concatMap, takeUntil, map, catchError, filter } from 'rxjs/operators';
+import { concatMap, takeUntil, map, catchError } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 import { HttpEvent, HttpEventType, HttpResponse } from '@angular/common/http';
 
-import { TransferFileService } from '../../services/transfer-file.service';
+import { TransferFileService } from '../transfer-file.service';
 import {
   HasOwner,
   UploadedFileResponse,
   BucketDestination,
   LoadedFile,
-} from '../../models';
-import * as fromFileTransfer from '../actions';
+} from '../models';
+import * as fromActions from './upload-file.action';
 
 @Injectable({
   providedIn: 'root',
 })
-export class TransferFileEffect {
+export class UploadFileEffect {
   constructor(
-    private actions$: Actions<fromFileTransfer.FileTransferActions>,
+    private actions$: Actions<fromActions.UploadActions>,
     private uploadService: TransferFileService,
   ) {}
 
   @Effect()
   uploadRequestEffect$: Observable<Action> = this.actions$.pipe(
-    ofType(fromFileTransfer.UPLOAD_REQUEST),
+    ofType(fromActions.UPLOAD_REQUEST),
     map(({ payload }) => this.setFileOwnership(payload)),
     concatMap(payload =>
       this.uploadService.uploadFile(payload.file, payload.destination).pipe(
-        takeUntil(this.actions$.pipe(ofType(fromFileTransfer.UPLOAD_CANCEL))),
+        takeUntil(this.actions$.pipe(ofType(fromActions.UPLOAD_CANCEL))),
         map(this.getActionFromHttpEvent(payload.owner, payload.destination)),
         catchError(error => of(error)),
       ),
@@ -44,30 +44,30 @@ export class TransferFileEffect {
     return (event: HttpEvent<any>) => {
       switch (event.type) {
         case HttpEventType.Sent: {
-          return new fromFileTransfer.UploadStarted();
+          return new fromActions.UploadStarted();
         }
         case HttpEventType.DownloadProgress:
         case HttpEventType.UploadProgress: {
-          return new fromFileTransfer.UploadProgress({
+          return new fromActions.UploadProgress({
             progress: Math.round((100 * event.loaded) / event.total),
           });
         }
         case HttpEventType.ResponseHeader:
         case HttpEventType.Response: {
           return event.status === 201
-            ? new fromFileTransfer.UploadCompleted({
+            ? new fromActions.UploadCompleted({
                 file: this.getFileInfo(
                   event as HttpResponse<UploadedFileResponse>,
                   owner,
                   destination,
                 ),
               })
-            : new fromFileTransfer.UploadFailure({
+            : new fromActions.UploadFailure({
                 error: event.statusText,
               });
         }
         default: {
-          return new fromFileTransfer.UploadFailure({
+          return new fromActions.UploadFailure({
             error: `Unknown Event : ${JSON.stringify(event)}`,
           });
         }
