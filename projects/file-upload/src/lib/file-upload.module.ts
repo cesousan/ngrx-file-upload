@@ -8,7 +8,7 @@ import {
   MatProgressBarModule,
   MatButtonModule,
   MatIconModule,
-  MatChipsModule
+  MatChipsModule,
 } from '@angular/material';
 
 // store
@@ -18,7 +18,7 @@ import {
   TransferFileService,
   TransferFileConfig,
   TransferFileDefaultConfig,
-  TransferFileConfigService
+  TransferFileConfigService,
 } from './transfer-file.service';
 
 import { FileUploaderComponent } from './file-uploader.component';
@@ -30,29 +30,32 @@ const MATERIAL_COMPONENTS = [
   MatProgressBarModule,
   MatButtonModule,
   MatIconModule,
-  MatChipsModule
+  MatChipsModule,
 ];
 
 @NgModule({
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    StoreModule.forFeature('uploads', [fromStore.reducer]),
+    StoreModule.forFeature(
+      fromStore.FILE_UPLOAD_FEATURE_KEY,
+      fromStore.reducers,
+    ),
     EffectsModule.forFeature([fromStore.UploadFileEffect]),
-    MATERIAL_COMPONENTS
+    MATERIAL_COMPONENTS,
   ],
   declarations: [FileUploaderComponent, FileUploadComponent, ProgressComponent],
-  exports: [FileUploaderComponent, FileUploadComponent, ProgressComponent] // TODO: try to restrict exports to bare minimum
+  exports: [FileUploaderComponent, FileUploadComponent, ProgressComponent], // TODO: try to restrict exports to bare minimum
 })
 export class FileUploadModule {
   static forRoot(
-    config: Partial<TransferFileConfig> = {}
+    config: Partial<TransferFileConfig> = {},
   ): ModuleWithProviders<FileUploadModule> {
     const transferFileConfig =
       !!config && typeof config === 'object'
         ? {
             ...TransferFileDefaultConfig,
-            ...config
+            ...config,
           }
         : TransferFileDefaultConfig;
     return {
@@ -62,9 +65,9 @@ export class FileUploadModule {
         FileUploadFacade,
         {
           provide: TransferFileConfigService,
-          useValue: transferFileConfig
-        }
-      ]
+          useValue: transferFileConfig,
+        },
+      ],
     };
   }
 }

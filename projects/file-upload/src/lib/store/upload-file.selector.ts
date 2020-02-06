@@ -2,67 +2,72 @@ import { createSelector } from '@ngrx/store';
 
 import * as fromReducer from './upload-file.reducer';
 
-export const selectTransferFileError = createSelector(
+export const selectUploadFileState = createSelector(
   fromReducer.selectUploadFeatureState,
-  fromReducer.getError
+  state => state.files,
 );
 
-export const selectTransferFileReady = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.getUploadReady
+export const selectUploadFileError = createSelector(
+  selectUploadFileState,
+  fromReducer.getError,
 );
 
-export const selectTransferFileProgress = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.getProgress
+export const selectUploadFileReady = createSelector(
+  selectUploadFileState,
+  fromReducer.getUploadReady,
+);
+
+export const selectUploadFileProgress = createSelector(
+  selectUploadFileState,
+  fromReducer.getProgress,
 );
 
 // UPLOAD
 export const selectUploadFileRequested = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.getUploadRequested
+  selectUploadFileState,
+  fromReducer.getUploadRequested,
 );
 
 export const selectUploadFileStarted = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.getUploadStarted
+  selectUploadFileState,
+  fromReducer.getUploadStarted,
 );
 
 export const selectUploadFileInProgress = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.getUploadInProgress
+  selectUploadFileState,
+  fromReducer.getUploadInProgress,
 );
 
 export const selectUploadFileFailed = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.getUploadFailed
+  selectUploadFileState,
+  fromReducer.getUploadFailed,
 );
 
 export const selectUploadFileCompleted = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.getUploadCompleted
+  selectUploadFileState,
+  fromReducer.getUploadCompleted,
 );
 
 // FILES
 
 export const selectFileEntities = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.selectEntities
+  selectUploadFileState,
+  fromReducer.selectEntities,
 );
 
 export const selectAllFiles = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.selectAll
+  selectUploadFileState,
+  fromReducer.selectAll,
 );
 
 export const selectFileIds = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.selectIds
+  selectUploadFileState,
+  fromReducer.selectIds,
 );
 
 export const selectFilesCount = createSelector(
-  fromReducer.selectUploadFeatureState,
-  fromReducer.selectTotal
+  selectUploadFileState,
+  fromReducer.selectTotal,
 );
 
 export const selectFileById = (fileId: string) =>
@@ -70,6 +75,6 @@ export const selectFileById = (fileId: string) =>
 
 export const selectFileByOwnerId = (ownerId: string) => {
   return createSelector(selectAllFiles, files =>
-    files.filter(file => !!file && file.ownerId === ownerId)
+    files.filter(file => !!file && file.ownerId === ownerId),
   );
 };

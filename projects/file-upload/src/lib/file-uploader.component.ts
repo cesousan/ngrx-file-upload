@@ -1,5 +1,5 @@
-import { Store } from '@ngrx/store';
-import { Observable, Subject, BehaviorSubject, combineLatest } from 'rxjs';
+import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
+import { withLatestFrom, map, filter, tap, takeUntil } from 'rxjs/operators';
 
 import {
   Component,
@@ -8,13 +8,11 @@ import {
   OnDestroy,
   HostListener,
   Output,
-  EventEmitter
+  EventEmitter,
 } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 
-import * as fromStore from './store';
 import { FileUploadFacade } from './file-upload.facade';
-import { withLatestFrom, map, filter, tap, takeUntil } from 'rxjs/operators';
 import { UploadFileRequestPayload } from './file.model';
 
 @Component({
@@ -42,13 +40,13 @@ import { UploadFileRequestPayload } from './file.model';
         margin: 5px;
         padding: 5px;
       }
-    `
-  ]
+    `,
+  ],
 })
 export class FileUploaderComponent implements OnInit, OnDestroy {
   @Input() requieredFileTypes: string[];
-  @Input() ownerId: Observable<string>;
-  @Input() fileDestination: Observable<string>;
+  @Input() ownerId: Observable<string> = of(null);
+  @Input() fileDestination: Observable<string> = of(null);
 
   @Output() uploadedFile: EventEmitter<{
     fileName: string;
@@ -75,8 +73,8 @@ export class FileUploaderComponent implements OnInit, OnDestroy {
     this.uploadForm = new FormGroup({
       file: new FormControl(null, [
         Validators.required,
-        requiredTypes(this.requieredFileTypes)
-      ])
+        requiredTypes(this.requieredFileTypes),
+      ]),
     });
 
     this.uploadRequested
@@ -88,18 +86,18 @@ export class FileUploaderComponent implements OnInit, OnDestroy {
           ([file, ownerId, destination]): UploadFileRequestPayload => ({
             file,
             ownerId,
-            destination
-          })
+            destination,
+          }),
         ),
         tap(reqPayload => {
           const { file, ...meta } = reqPayload;
           this.uploadedFile.emit({
             fileName: file.name,
-            ...meta
+            ...meta,
           });
         }),
-        tap(this.facade.dispatchUploadRequest),
-        takeUntil(this.destroy$)
+        tap(reqPayload => this.facade.dispatchUploadRequest(reqPayload)),
+        takeUntil(this.destroy$),
       )
       .subscribe();
   }
@@ -123,7 +121,7 @@ function requiredTypes(fileTypes: Array<string>) {
       const extension = file.name.split('.')[1].toLowerCase();
       if (!fileTypes.map(x => x.toLowerCase().includes(extension))) {
         return {
-          requiredFileType: true
+          requiredFileType: true,
         };
       }
       return null;

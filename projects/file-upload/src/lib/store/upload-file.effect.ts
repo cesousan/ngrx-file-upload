@@ -1,6 +1,5 @@
-import { Action } from '@ngrx/store';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Observable, of } from 'rxjs';
+import { Actions, ofType, createEffect } from '@ngrx/effects';
+import { of } from 'rxjs';
 import { concatMap, takeUntil, map, catchError } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
@@ -10,61 +9,60 @@ import { TransferFileService } from '../transfer-file.service';
 import {
   UploadedFileResponse,
   LoadedFile,
-  UploadFileRequestPayload
+  UploadFileRequestPayload,
 } from '../file.model';
 import * as fromActions from './upload-file.action';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class UploadFileEffect {
   constructor(
-    private actions$: Actions<fromActions.UploadActions>,
-    private uploadService: TransferFileService
+    private actions$: Actions,
+    private uploadService: TransferFileService,
   ) {}
 
-  @Effect()
-  uploadRequestEffect$: Observable<Action> = this.actions$.pipe(
-    ofType<fromActions.UploadRequest>(fromActions.UPLOAD_REQUEST),
-    // map(({ payload }) => this.setFileOwnership(payload)),
-    concatMap(({ payload }) =>
-      this.uploadService.uploadFile(payload.file, payload.destination).pipe(
-        takeUntil(this.actions$.pipe(ofType(fromActions.UPLOAD_CANCEL))),
-        map(this.getActionFromHttpEvent(payload.ownerId, payload.destination)),
-        catchError(error => of(error))
-      )
-    )
+  uploadRequestEffect$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(fromActions.UPLOAD_REQUEST),
+      map(x => x),
+      concatMap(({ file, destination, ownerId }: UploadFileRequestPayload) =>
+        this.uploadService.uploadFile(file, destination).pipe(
+          takeUntil(this.actions$.pipe(ofType(fromActions.UPLOAD_CANCEL))),
+          map(this.getActionFromHttpEvent(ownerId, destination)),
+          catchError(error => of(error)),
+        ),
+      ),
+    ),
   );
 
   private getActionFromHttpEvent(ownerId: string, destination: string) {
     return (event: HttpEvent<any>) => {
       switch (event.type) {
         case HttpEventType.Sent: {
-          return new fromActions.UploadStarted();
+          return fromActions.uploadStarted();
         }
         case HttpEventType.DownloadProgress:
         case HttpEventType.UploadProgress: {
-          return new fromActions.UploadProgress({
-            progress: Math.round((100 * event.loaded) / event.total)
+          return fromActions.uploadProgress({
+            progress: Math.round((100 * event.loaded) / event.total),
           });
         }
         case HttpEventType.ResponseHeader:
         case HttpEventType.Response: {
           return event.status === 201
-            ? new fromActions.UploadCompleted({
+            ? fromActions.uploadCompleted({
                 file: this.getFileInfo(
                   event as HttpResponse<UploadedFileResponse>,
                   ownerId,
-                  destination
-                )
+                  destination,
+                ),
               })
-            : new fromActions.UploadFailure({
-                error: event.statusText
+            : fromActions.uploadFailure({
+                error: event.statusText,
               });
         }
         default: {
-          return new fromActions.UploadFailure({
-            error: `Unknown Event : ${JSON.stringify(event)}`
+          return fromActions.uploadFailure({
+            error: `Unknown Event : ${JSON.stringify(event)}`,
           });
         }
       }
@@ -74,7 +72,7 @@ export class UploadFileEffect {
   private getFileInfo(
     event: HttpResponse<UploadedFileResponse>,
     ownerId: string,
-    destination: string
+    destination: string,
   ): LoadedFile {
     if (!event.body) {
       return;
@@ -90,7 +88,7 @@ export class UploadFileEffect {
       src: this.uploadService.getFileUrl(id, destination),
       destination,
       updatedAt: new Date(updatedAt),
-      ownerId
+      ownerId,
     };
   }
 }

@@ -1,8 +1,15 @@
-import { MemoizedSelector, createFeatureSelector } from '@ngrx/store';
+import {
+  ActionReducerMap,
+  MemoizedSelector,
+  createFeatureSelector,
+  createReducer,
+  on,
+  Action,
+} from '@ngrx/store';
 import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 
-import * as fromActions from './upload-file.action';
 import { UploadStatus, LoadedFile } from '../file.model';
+import * as Actions from './upload-file.action';
 
 export const FILE_UPLOAD_FEATURE_KEY = 'uploads';
 
@@ -17,96 +24,71 @@ export function selectFileId(a: LoadedFile): string {
 }
 
 export function sortByLastUpdated(a: LoadedFile, b: LoadedFile) {
-  return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+  return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 }
 
 export const adapter: EntityAdapter<LoadedFile> = createEntityAdapter<
   LoadedFile
 >({
   selectId: selectFileId,
-  sortComparer: sortByLastUpdated
+  sortComparer: sortByLastUpdated,
 });
 
 export const initialState: FileUploadState = adapter.getInitialState({
   status: UploadStatus.Ready,
   error: null,
-  progress: null
+  progress: null,
 });
 
-export const selectUploadFeatureState: MemoizedSelector<
-  object,
-  FileUploadState
-> = createFeatureSelector<FileUploadState>(FILE_UPLOAD_FEATURE_KEY);
+const uploadReducer = createReducer(
+  initialState,
+  on(Actions.uploadRequest, (state, payload) => ({
+    ...state,
+    status: UploadStatus.Requested,
+    progress: null,
+    error: null,
+  })),
+  on(Actions.uploadReset, Actions.uploadCancel, (state, payload) => ({
+    ...state,
+    status: UploadStatus.Ready,
+    progress: null,
+    error: null,
+  })),
+  on(Actions.uploadFailure, (state, { error }) => ({
+    ...state,
+    status: UploadStatus.Failed,
+    error,
+    progress: null,
+  })),
+  on(Actions.uploadStarted, (state, payload) => ({
+    ...state,
+    status: UploadStatus.Started,
+    progress: 0,
+  })),
+  on(Actions.uploadProgress, (state, { progress }) => ({
+    ...state,
+    progress,
+  })),
+  on(Actions.uploadCompleted, (state, { file }) => {
+    const completeState = {
+      ...state,
+      status: UploadStatus.Completed,
+      progress: 100,
+      error: null,
+    };
+    return !!file ? adapter.addOne(file, completeState) : completeState;
+  }),
+);
 
-export function reducer(
-  state = initialState,
-  action: fromActions.UploadActions
-): FileUploadState {
-  switch (action.type) {
-    case fromActions.UPLOAD_REQUEST: {
-      return {
-        ...state,
-        status: UploadStatus.Requested,
-        progress: null,
-        error: null
-      };
-    }
-    case fromActions.UPLOAD_CANCEL: {
-      return {
-        ...state,
-        status: UploadStatus.Ready,
-        progress: null,
-        error: null
-      };
-    }
-    case fromActions.UPLOAD_RESET: {
-      return {
-        ...state,
-        status: UploadStatus.Ready,
-        progress: null,
-        error: null
-      };
-    }
-    case fromActions.UPLOAD_FAILURE: {
-      return {
-        ...state,
-        status: UploadStatus.Failed,
-        error: action.payload.error,
-        progress: null
-      };
-    }
-    case fromActions.UPLOAD_STARTED: {
-      return {
-        ...state,
-        status: UploadStatus.Started,
-        progress: 0
-      };
-    }
-    case fromActions.UPLOAD_PROGRESS: {
-      return {
-        ...state,
-        progress: action.payload.progress
-      };
-    }
-    case fromActions.UPLOAD_COMPLETED: {
-      return adapter.addOne(action.payload.file, {
-        ...state,
-        status: UploadStatus.Completed,
-        progress: 100,
-        error: null
-      });
-    }
-    default: {
-      return state;
-    }
-  }
+export function reducer(state: FileUploadState | undefined, action: Action) {
+  return uploadReducer(state, action);
 }
 
 export const {
   selectIds,
   selectEntities,
   selectAll,
-  selectTotal
+  selectTotal,
 } = adapter.getSelectors();
 
 export const getError = (state: FileUploadState): string => state.error;
@@ -130,3 +112,15 @@ export const getUploadFailed = (state: FileUploadState): boolean =>
 
 export const getUploadCompleted = (state: FileUploadState): boolean =>
   state.status === UploadStatus.Completed;
+
+export interface FileUploadFeatureState {
+  files: FileUploadState;
+}
+export const reducers: ActionReducerMap<FileUploadFeatureState> = {
+  files: reducer,
+};
+
+export const selectUploadFeatureState: MemoizedSelector<
+  object,
+  FileUploadFeatureState
+> = createFeatureSelector<FileUploadFeatureState>(FILE_UPLOAD_FEATURE_KEY);

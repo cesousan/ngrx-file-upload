@@ -2,7 +2,7 @@
  * Public API Surface of file-upload
  */
 
-import * as UploadService from './lib/file-upload.facade';
+import { FileUploadFacade as UploadService } from './lib/file-upload.facade';
 
 export * from './lib/file-upload.module';
 export * from './lib/file-uploader.component';

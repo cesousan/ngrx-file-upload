@@ -1,4 +1,4 @@
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { LoadedFile, UploadFileRequestPayload } from '../file.model';
 
 export const UPLOAD_REQUEST = '[File Upload Form] Request';
@@ -9,43 +9,22 @@ export const UPLOAD_PROGRESS = '[File Upload API] Progress';
 export const UPLOAD_FAILURE = '[File Upload API] Failure';
 export const UPLOAD_COMPLETED = '[File Upload API] Success';
 
-export class UploadRequest implements Action {
-  readonly type = UPLOAD_REQUEST;
-  constructor(public payload: UploadFileRequestPayload) {}
-}
-
-export class UploadCancel implements Action {
-  readonly type = UPLOAD_CANCEL;
-}
-
-export class UploadReset implements Action {
-  readonly type = UPLOAD_RESET;
-}
-
-export class UploadStarted implements Action {
-  readonly type = UPLOAD_STARTED;
-}
-
-export class UploadProgress implements Action {
-  readonly type = UPLOAD_PROGRESS;
-  constructor(public payload: { progress: number }) {}
-}
-
-export class UploadFailure implements Action {
-  readonly type = UPLOAD_FAILURE;
-  constructor(public payload: { error: string }) {}
-}
-
-export class UploadCompleted implements Action {
-  readonly type = UPLOAD_COMPLETED;
-  constructor(public payload: { file: LoadedFile }) {}
-}
-
-export type UploadActions =
-  | UploadRequest
-  | UploadCancel
-  | UploadReset
-  | UploadStarted
-  | UploadProgress
-  | UploadFailure
-  | UploadCompleted;
+export const uploadRequest = createAction(
+  UPLOAD_REQUEST,
+  props<UploadFileRequestPayload>(),
+);
+export const uploadCancel = createAction(UPLOAD_CANCEL);
+export const uploadReset = createAction(UPLOAD_RESET);
+export const uploadStarted = createAction(UPLOAD_STARTED);
+export const uploadProgress = createAction(
+  UPLOAD_PROGRESS,
+  props<{ progress: number }>(),
+);
+export const uploadFailure = createAction(
+  UPLOAD_FAILURE,
+  props<{ error: any }>(),
+);
+export const uploadCompleted = createAction(
+  UPLOAD_COMPLETED,
+  props<{ file: LoadedFile }>(),
+);

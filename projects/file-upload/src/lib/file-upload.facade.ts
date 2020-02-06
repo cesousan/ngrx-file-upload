@@ -1,40 +1,38 @@
 import { Store, select } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { map, filter } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 
 import * as fromStore from './store';
 import { LoadedFile, UploadFileRequestPayload } from './file.model';
-import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class FileUploadFacade {
   public uploadedFiles$: Observable<LoadedFile[]> = this.store.pipe(
-    select(fromStore.selectAllFiles)
+    select(fromStore.selectAllFiles),
   );
 
   public lastUploadedFile$: Observable<LoadedFile> = this.uploadedFiles$.pipe(
-    map(getMostRecent)
+    filter(files => !!files && Array.isArray(files)),
+    map(files => files.sort(fromStore.sortByLastUpdated)[0]),
   );
 
-  constructor(private store: Store<fromStore.FileUploadState>) {}
+  constructor(private store: Store<fromStore.FileUploadState>) {
+    this.store.dispatch(fromStore.uploadReset());
+  }
 
   dispatchUploadRequest({
     file,
     ownerId,
-    destination
+    destination,
   }: UploadFileRequestPayload) {
     this.store.dispatch(
-      new fromStore.UploadRequest({
+      fromStore.uploadRequest({
         file,
         ownerId,
-        destination
-      })
+        destination,
+      }),
     );
   }
 }
-
-const getMostRecent = (files: LoadedFile[]) =>
-  files.sort(
-    (a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
-  )[0];
